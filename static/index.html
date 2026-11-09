@@ -1,0 +1,178 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Shelf Scout</title>
+  <meta name="theme-color" content="#f6f7f4" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#12171e" media="(prefers-color-scheme: dark)">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="Shelf Scout">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="icon-180.png">
+  <link rel="preload" href="archivo.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="top">
+    <div class="wrap">
+      <a class="brand" href="./#new" aria-label="Shelf Scout home">
+        <svg viewBox="0 0 22 26" aria-hidden="true">
+          <rect x="1" y="1" width="9" height="24" rx="1.5" fill="currentColor"/>
+          <rect x="12" y="5" width="8" height="20" rx="1.5" fill="none" stroke="currentColor" stroke-width="2"/>
+          <circle cx="5.5" cy="7" r="2.6" fill="#ffc83d"/>
+        </svg>
+        Shelf Scout
+      </a>
+      <button class="icon-btn" id="open-isbn" type="button" aria-label="Check an ISBN">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+          <path d="M4 5v14M7 5v14M10 5v14M14 5v14M17 5v14M20 5v14" stroke-width="1.6"/>
+        </svg>
+      </button>
+      <button class="icon-btn" id="open-settings" type="button" aria-label="Buying settings">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+          <path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2"/><circle cx="10" cy="17" r="2"/>
+        </svg>
+      </button>
+    </div>
+  </header>
+
+  <div class="wrap"><div id="banner" class="banner" role="status" hidden></div></div>
+
+  <main id="home" class="wrap home">
+    <h1>Which of these books are worth buying?</h1>
+    <p class="lede">Photograph a shelf. You'll get the books worth pulling, what each one resells for, and the most you should pay.</p>
+    <button class="snap" type="button" data-pick="camera">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+        <path d="M3 8a2 2 0 0 1 2-2h2l1.5-2h7L17 6h2a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><circle cx="12" cy="13" r="4"/>
+      </svg>
+      Photograph a shelf
+    </button>
+    <div class="row-actions">
+      <button class="ghost" type="button" data-pick="library">Choose a photo</button>
+      <button class="ghost" type="button" data-open="isbn">Check an ISBN</button>
+    </div>
+    <ul class="tips">
+      <li>Stand square to the shelf and fill the frame with one or two rows of spines.</li>
+      <li>Tilt the phone a little to kill glare on glossy jackets.</li>
+      <li>Pull the books marked Pull, then type the ISBN of anything marked Look closer.</li>
+    </ul>
+  </main>
+
+  <main id="busy" class="wrap busy" hidden aria-live="polite">
+    <div class="frame"><img id="busy-img" alt=""><div class="sweep"></div></div>
+    <h2>Reading spines and checking prices</h2>
+    <p><span id="busy-secs" class="num">0</span>s. A full shelf usually takes 20 to 60 seconds.</p>
+  </main>
+
+  <main id="results" class="wrap results" hidden>
+    <div class="shelf" id="shelf"><img id="shelf-img" alt="Your shelf photo with markers on each book"></div>
+    <div class="tally" id="tally"></div>
+    <div class="seg" role="group" aria-label="Which books to show">
+      <button type="button" data-filter="worth" aria-pressed="true">Pull and look closer</button>
+      <button type="button" data-filter="all" aria-pressed="false">Every book</button>
+    </div>
+    <ol class="list" id="list"></ol>
+    <details class="notes" id="notes" hidden><summary>Notes on this scan</summary><ul id="notes-list"></ul></details>
+  </main>
+
+  <div class="dock" id="dock" hidden>
+    <div class="wrap">
+      <button class="snap" type="button" data-pick="camera">Photograph next shelf</button>
+      <button class="ghost" type="button" data-open="isbn">ISBN</button>
+    </div>
+  </div>
+
+  <input type="file" id="pick-camera" accept="image/*" capture="environment" hidden>
+  <input type="file" id="pick-library" accept="image/*" hidden>
+
+  <dialog id="settings" aria-labelledby="settings-title">
+    <form class="sheet" method="dialog" id="settings-form">
+      <header>
+        <h2 id="settings-title">Buying settings</h2>
+        <button class="icon-btn" value="cancel" aria-label="Close">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
+        </button>
+      </header>
+      <div class="pair">
+        <div class="field">
+          <label for="s-cost">Price per book</label>
+          <div class="money"><span>$</span><input id="s-cost" name="cost_per_book" type="number" inputmode="decimal" step="any" min="0"></div>
+          <span class="hint">What this shelf is asking</span>
+        </div>
+        <div class="field">
+          <label for="s-profit">Minimum profit</label>
+          <div class="money"><span>$</span><input id="s-profit" name="min_profit" type="number" inputmode="decimal" step="any" min="0"></div>
+          <span class="hint">Per book, after fees</span>
+        </div>
+      </div>
+      <div class="pair">
+        <div class="field">
+          <label for="s-roi">Minimum return</label>
+          <select id="s-roi" name="min_roi">
+            <option value="0.5">50% of cost</option>
+            <option value="1">100% of cost</option>
+            <option value="2">200% of cost</option>
+            <option value="3">300% of cost</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="s-window">Must sell within</label>
+          <select id="s-window" name="sell_window_days">
+            <option value="30">30 days</option>
+            <option value="90">90 days</option>
+            <option value="180">6 months</option>
+            <option value="365">1 year</option>
+          </select>
+        </div>
+      </div>
+      <div class="field">
+        <label for="s-cond">Typical condition you buy</label>
+        <select id="s-cond" name="condition">
+          <option value="like_new">Like new</option>
+          <option value="very_good">Very good</option>
+          <option value="good">Good</option>
+          <option value="acceptable">Acceptable</option>
+        </select>
+      </div>
+      <fieldset class="field">
+        <legend>Where you sell</legend>
+        <div class="checks">
+          <label><input type="checkbox" name="ch" value="amazon_fba"> Amazon FBA</label>
+          <label><input type="checkbox" name="ch" value="amazon_fbm"> Amazon, shipping it yourself</label>
+          <label><input type="checkbox" name="ch" value="ebay"> eBay</label>
+        </div>
+      </fieldset>
+      <div class="field" id="pw-field" hidden>
+        <label for="s-pw">App password</label>
+        <input id="s-pw" type="password" autocomplete="current-password">
+        <span class="hint">Set by whoever runs this server (APP_PASSWORD).</span>
+      </div>
+      <button class="primary" value="save" id="settings-save">Save settings</button>
+    </form>
+  </dialog>
+
+  <dialog id="isbn" aria-labelledby="isbn-title">
+    <div class="sheet">
+      <header>
+        <h2 id="isbn-title">Check an ISBN</h2>
+        <button class="icon-btn" type="button" data-close aria-label="Close">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
+        </button>
+      </header>
+      <form class="isbn-form" id="isbn-form">
+        <div class="field" style="margin:0">
+          <label for="isbn-input">ISBN from the back cover or copyright page</label>
+          <input id="isbn-input" type="text" inputmode="numeric" autocomplete="off" placeholder="978…" maxlength="17">
+        </div>
+        <button class="primary" type="submit" id="isbn-go">Check</button>
+      </form>
+      <p class="err-text" id="isbn-err" hidden></p>
+      <div class="isbn-out" id="isbn-out"></div>
+    </div>
+  </dialog>
+
+  <script src="app.js"></script>
+</body>
+</html>
